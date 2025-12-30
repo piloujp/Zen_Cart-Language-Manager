@@ -17,3 +17,36 @@ function filterTable() {
         }
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    // handle typing in textarea
+    const textareas = document.querySelectorAll('.definition-input');
+    textareas.forEach(function(textarea) {
+        textarea.addEventListener('input', function() {
+            const key = this.getAttribute('data-key');
+            const checkbox = document.getElementById('default_cb_' + key);
+            const wrapper = document.getElementById('wrapper_' + key);
+
+            if (checkbox) {
+                checkbox.checked = false;
+                wrapper.classList.remove('is-default');
+            }
+        });
+    });
+
+    // handle clicking checkbox
+    const checkboxes = document.querySelectorAll('.default-checkbox');
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const key = this.getAttribute('data-key');
+            const wrapper = document.getElementById('wrapper_' + key);
+
+            if (this.checked) {
+                wrapper.classList.add('is-default');
+            } else {
+                wrapper.classList.remove('is-default');
+            }
+        });
+    });
+});

@@ -3,6 +3,8 @@
  * @package Admin
  * @copyright Copyright 2003-2025 Zen Cart Development Team
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+ * @version ZenExpert 30 Dec 2025
+ * copyright 2025 ZenExpert - https://zenexpert.com
  */
 
 require('includes/application_top.php');
@@ -33,42 +35,79 @@ $editor_mode = (isset($_REQUEST['mode']) && $_REQUEST['mode'] === 'advanced') ? 
 // create new language pack
 if ($action == 'create_language' && isset($_POST['new_language'])) {
 
-    // Sanitize: Lowercase, alphanumeric only
+    // sanitize
     $new_lang_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $_POST['new_language']));
-    $source_lang = 'english'; // Or use $target_language if you want to clone from current selection
+    $source_lang = 'english';
 
-    // STRICT PATHS: We only look for lang.{name}.php
-    $source_loader = DIR_FS_CATALOG . 'includes/languages/lang.' . $source_lang . '.php';
-    $source_dir    = DIR_FS_CATALOG . 'includes/languages/' . $source_lang . '/';
+    // catalog paths (frontend)
+    $cat_source_loader = DIR_FS_CATALOG . 'includes/languages/lang.' . $source_lang . '.php';
+    $cat_source_dir    = DIR_FS_CATALOG . 'includes/languages/' . $source_lang . '/';
 
-    $target_loader = DIR_FS_CATALOG . 'includes/languages/lang.' . $new_lang_name . '.php';
-    $target_dir    = DIR_FS_CATALOG . 'includes/languages/' . $new_lang_name . '/';
+    $cat_target_loader = DIR_FS_CATALOG . 'includes/languages/lang.' . $new_lang_name . '.php';
+    $cat_target_dir    = DIR_FS_CATALOG . 'includes/languages/' . $new_lang_name . '/';
 
-    // Validation
+    // admin paths (backend)
+    $adm_source_loader = DIR_FS_ADMIN . 'includes/languages/lang.' . $source_lang . '.php';
+    $adm_source_dir    = DIR_FS_ADMIN . 'includes/languages/' . $source_lang . '/';
+
+    $adm_target_loader = DIR_FS_ADMIN . 'includes/languages/lang.' . $new_lang_name . '.php';
+    $adm_target_dir    = DIR_FS_ADMIN . 'includes/languages/' . $new_lang_name . '/';
+
+    // validation
+    $errors = [];
+
     if (empty($new_lang_name)) {
-        $messageStack->add('Error: Language name is required.', 'error');
-    } elseif (file_exists($target_loader) || is_dir($target_dir)) {
-        $messageStack->add('Error: Language "' . $new_lang_name . '" already exists!', 'error');
-    } elseif (!file_exists($source_loader) || !is_dir($source_dir)) {
-        $messageStack->add('Error: Source language files (' . $source_lang . ') not found.', 'error');
+        $errors[] = ERROR_LANGUAGE_NAME_REQUIRED;
+    }
+    // check if target already exists (catalog)
+    elseif (file_exists($cat_target_loader) || is_dir($cat_target_dir)) {
+        $errors[] = sprintf(ERROR_CATALOG_LANG_EXISTS, $new_lang_name);
+    }
+    // check if source exists (catalog)
+    elseif (!file_exists($cat_source_loader) || !is_dir($cat_source_dir)) {
+        $errors[] = sprintf(ERROR_SOURCE_CATALOG_NOT_FOUND, $source_lang);
+    }
+    // check if source exists (admin)
+    elseif (!file_exists($adm_source_loader) || !is_dir($adm_source_dir)) {
+        $errors[] = sprintf(ERROR_SOURCE_ADMIN_NOT_FOUND, $source_lang);
+    }
+
+    if (!empty($errors)) {
+        foreach($errors as $err) $messageStack->add($err, 'error');
     } else {
-        // 1. copy main file (lang.english.php -> lang.new.php)
-        if (!copy($source_loader, $target_loader)) {
-            $messageStack->add('Error: Could not copy loader file.', 'error');
+
+        // catalog clone
+        if (!copy($cat_source_loader, $cat_target_loader)) {
+            $messageStack->add(ERROR_COPY_CATALOG_LOADER, 'error');
         } else {
-            // recursive copy directory
-            recursive_copy($source_dir, $target_dir);
+            // recursive copy
+            recursive_copy($cat_source_dir, $cat_target_dir);
 
-            // rename internal definition (lang.english.php -> lang.new.php)
-            $internal_source = $target_dir . 'lang.' . $source_lang . '.php';
-            $internal_target = $target_dir . 'lang.' . $new_lang_name . '.php';
+            // rename (lang.english.php -> lang.new.php)
+            $cat_internal_src = $cat_target_dir . 'lang.' . $source_lang . '.php';
+            $cat_internal_dst = $cat_target_dir . 'lang.' . $new_lang_name . '.php';
+            if (file_exists($cat_internal_src)) rename($cat_internal_src, $cat_internal_dst);
 
-            if (file_exists($internal_source)) {
-                rename($internal_source, $internal_target);
-            }
-
-            $messageStack->add('Success! New Language Pack "' . $new_lang_name . '" created.', 'success');
+            $messageStack->add(SUCCESS_CATALOG_CREATED, 'success');
         }
+
+        // admin clone
+        if (!copy($adm_source_loader, $adm_target_loader)) {
+            // if Admin copy fails, warn the user, but catalog might have already succeeded
+            $messageStack->add(ERROR_COPY_ADMIN_LOADER, 'error');
+        } else {
+            // recursive copy
+            recursive_copy($adm_source_dir, $adm_target_dir);
+
+            // rename (lang.english.php -> lang.new.php)
+            $adm_internal_src = $adm_target_dir . 'lang.' . $source_lang . '.php';
+            $adm_internal_dst = $adm_target_dir . 'lang.' . $new_lang_name . '.php';
+            if (file_exists($adm_internal_src)) rename($adm_internal_src, $adm_internal_dst);
+
+            $messageStack->add(SUCCESS_ADMIN_CREATED, 'success');
+        }
+
+        $messageStack->add(sprintf(SUCCESS_LANG_PACK_READY, $new_lang_name), 'success');
     }
 }
 
@@ -122,21 +161,33 @@ if ($action == 'save' && !empty($current_file)) {
 
         if (isset($_POST['definitions']) && is_array($_POST['definitions'])) {
             foreach ($_POST['definitions'] as $key => $input) {
-                $input = trim($input);
 
-                // skip empty inputs (we don't save empty overrides)
-                if ($input === '') continue;
+                // check "use default"
+                // if checked, DO NOT write this key to the file.
+                // either keeps the original or deletes an existing override
+                if (isset($_POST['use_default']) && isset($_POST['use_default'][$key])) {
+                    continue;
+                }
+
+                // process input
+                $input = trim($input);
+                $input = stripslashes($input);
+                $input = htmlspecialchars_decode($input, ENT_QUOTES);
 
                 if ($save_mode === 'basic') {
-                    // BASIC MODE: safe encoding using var_export
                     $final_line = var_export($input, true);
                     $file_content .= "  '$key' => " . $final_line . ",\n";
                     $save_count++;
                 } else {
-                    // ADVANCED MODE: raw code writing
-                    // validate syntax first
+                    // allow empty strings in custom mode
+                    if ($input === '') {
+                        $file_content .= "  '$key' => '',\n";
+                        $save_count++;
+                        continue;
+                    }
+
                     if (!is_valid_php_expression($input)) {
-                        $errors[] = "<strong>$key</strong>: Syntax Error (missing quotes/semicolon?)";
+                        $errors[] = "<strong>$key</strong>". PHP_SYNTAX_ERROR;
                         continue;
                     }
                     $file_content .= "  '$key' => " . $input . ",\n";
@@ -150,12 +201,12 @@ if ($action == 'save' && !empty($current_file)) {
         // write to disk or show errors
         if (!empty($errors)) {
             foreach ($errors as $err) $messageStack->add($err, 'error');
-            $messageStack->add('File NOT saved due to syntax errors.', 'warning');
+            $messageStack->add(ERROR_SYNTAX_ERROR, 'warning');
         } else {
             // make sure directory exists
             if (!is_dir($target_dir)) {
                 if (!mkdir($target_dir, 0755, true)) {
-                    $messageStack->add('Error: Could not create directory ' . $target_dir, 'error');
+                    $messageStack->add(ERROR_CANT_CREATE_DIR . $target_dir, 'error');
                     $save_count = -1; // prevent saving
                 }
             }
@@ -164,15 +215,15 @@ if ($action == 'save' && !empty($current_file)) {
                 // if we have overrides, save the file
                 if ($save_count > 0) {
                     if (file_put_contents($target_file_path, $file_content)) {
-                        $messageStack->add('Successfully saved ' . $save_count . ' overrides to ' . str_replace(DIR_FS_CATALOG, '', $target_file_path), 'success');
+                        $messageStack->add(sprintf(TEXT_SUCCESS_SAVED, $save_count) . str_replace(DIR_FS_CATALOG, '', $target_file_path), 'success');
                     } else {
-                        $messageStack->add('Write Error: Check permissions for ' . $target_dir, 'error');
+                        $messageStack->add(ERROR_CHECK_PERMISSIONS . $target_dir, 'error');
                     }
                 }
                 // if all overrides were removed (empty), delete the override file to revert to core
                 elseif (file_exists($target_file_path)) {
                     unlink($target_file_path);
-                    $messageStack->add('All overrides removed. File deleted.', 'success');
+                    $messageStack->add(TEXT_OVERRIDES_REMOVED, 'success');
                 }
             }
         }
@@ -397,19 +448,43 @@ if (is_dir($base_lang_dir)) {
                     <td class="col-key"><?php echo $key; ?></td>
                     <td class="col-orig">
                         <code><?php echo htmlspecialchars($raw_base_val); ?></code>
-                        <?php if (strpos($raw_base_val, '%s') !== false) echo '<div class="text-danger small">' . sprintf(TEXT_CONTAINS_TOKEN, '%s') . '</div>'; ?>
+                        <?php if (strpos($raw_base_val, '%s') !== false) echo '<div class="text-danger has-variable">' . sprintf(TEXT_CONTAINS_TOKEN, '%s') . '</div>'; ?>
                     </td>
                     <td class="col-edit">
-                        <?php if ($is_locked) { ?>
-                            <input type="text" class="form-control" disabled value="<?php echo $display_val; ?>" style="background:#eee; color:#888; font-style:italic;">
-                        <?php } else { ?>
-                            <textarea
-                                name="definitions[<?php echo $key; ?>]"
-                                class="form-control <?php echo $has_override ? 'has-override' : ''; ?>"
-                                placeholder="<?php echo htmlspecialchars($placeholder); ?>"
-                                style="<?php echo ($editor_mode == 'advanced' ? 'font-family:monospace; color:#d63384;' : ''); ?>"
-                            ><?php echo htmlspecialchars($display_val); ?></textarea>
-                        <?php } ?>
+                        <?php
+                        // determine state
+                        $is_default_checked = !$has_override;
+                        ?>
+
+                        <div id="wrapper_<?php echo $key; ?>" class="textarea-wrapper <?php echo $is_default_checked ? 'is-default' : ''; ?>">
+
+                            <?php if ($is_locked) { ?>
+                                <input type="text" class="form-control" disabled value="<?php echo $display_val; ?>" style="background:#eee; color:#888; font-style:italic;">
+
+                            <?php } else { ?>
+                                <textarea
+                                    name="definitions[<?php echo $key; ?>]"
+                                    id="input_<?php echo $key; ?>"
+                                    data-key="<?php echo $key; ?>"
+                                    class="form-control definition-input <?php echo $has_override ? 'has-override' : ''; ?>"
+                                    placeholder="<?php echo htmlspecialchars($placeholder); ?>"
+                                    style="<?php echo ($editor_mode == 'advanced' ? 'font-family:monospace; color:#d63384;' : ''); ?>"
+                                ><?php echo htmlspecialchars($display_val); ?></textarea>
+                            <?php } ?>
+
+                            <label class="use-default-label" title="<?php echo TEXT_USE_DEFAULT_LABEL; ?>">
+                                <input
+                                    type="checkbox"
+                                    name="use_default[<?php echo $key; ?>]"
+                                    id="default_cb_<?php echo $key; ?>"
+                                    data-key="<?php echo $key; ?>"
+                                    class="default-checkbox"
+                                    value="1"
+                                    <?php echo $is_default_checked ? 'checked' : ''; ?>
+                                >
+                                <?php echo TEXT_USE_DEFAULT; ?>
+                            </label>
+                        </div>
                     </td>
                 </tr>
             <?php } ?>

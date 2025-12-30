@@ -35,9 +35,29 @@ $define = [
     'TABLE_HEADING_OVERRIDE' => 'Your Override',
     'TEXT_RAW_PHP' => '(RAW PHP)',
     'TEXT_COMPLEX_LOCKED' => 'COMPLEX PHP (Switch to Advanced Mode to Edit)',
-    'TEXT_CONTAINS_TOKEN' => 'Contains %s',
+    'TEXT_CONTAINS_TOKEN' => 'WARNING: Contains %s',
+    'TEXT_USE_DEFAULT' => 'Use Default',
+    'TEXT_USE_DEFAULT_LABEL' => 'Check to use the original value (deletes override)',
 
     'BUTTON_SAVE_CHANGES' => 'Save Changes',
+
+    // Messages & Errors (Create Pack)
+    'ERROR_LANGUAGE_NAME_REQUIRED' => 'Error: Language name is required.',
+    'ERROR_CATALOG_LANG_EXISTS' => 'Error: Catalog Language "%s" already exists!',
+    'ERROR_SOURCE_CATALOG_NOT_FOUND' => 'Error: Source Catalog files (%s) not found.',
+    'ERROR_SOURCE_ADMIN_NOT_FOUND' => 'Error: Source Admin files (%s) not found. Cannot clone.',
+    'ERROR_COPY_CATALOG_LOADER' => 'Error: Could not copy Catalog loader.',
+    'ERROR_COPY_ADMIN_LOADER' => 'Error: Could not copy Admin loader.',
+    'ERROR_SYNTAX_ERROR' => 'File NOT saved due to syntax errors.',
+    'ERROR_CANT_CREATE_DIR' => 'Error: Could not create directory ',
+    'ERROR_CHECK_PERMISSIONS' => 'Write Error: Check permissions for ',
+    'TEXT_SUCCESS_SAVED' => 'Successfully saved %s overrides to ',
+    'TEXT_OVERRIDES_REMOVED' => 'All overrides removed. File deleted.',
+    'PHP_SYNTAX_ERROR' => ': Syntax Error',
+
+    'SUCCESS_CATALOG_CREATED' => 'Catalog files created successfully.',
+    'SUCCESS_ADMIN_CREATED' => 'Admin files created successfully.',
+    'SUCCESS_LANG_PACK_READY' => 'Language Pack "%s" is ready. You can now add it in Localization > Languages.',
 ];
 
 return $define;

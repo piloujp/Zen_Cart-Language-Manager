@@ -87,3 +87,37 @@
     margin-bottom: 15px;
     border-left: 4px solid #007bff;
 }
+.revert-wrapper {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #d9534f;
+}
+.revert-wrapper input {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+.use-default-label {
+    display: block;
+    margin-top: 5px;
+    font-weight: normal;
+    color: #666;
+    cursor: pointer;
+}
+.use-default-label input {
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+.textarea-wrapper.is-default textarea {
+    opacity: 0.5;
+    background-color: #f9f9f9;
+}
+.textarea-wrapper.is-default textarea:focus {
+    opacity: 1;
+    background-color: #fff;
+}
+.has-variable {
+    margin-top: 15px;
+    font-weight: bold;
+}
