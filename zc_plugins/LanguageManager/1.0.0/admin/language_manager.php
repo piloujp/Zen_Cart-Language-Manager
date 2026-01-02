@@ -3,8 +3,8 @@
  * @package Admin
  * @copyright Copyright 2003-2025 Zen Cart Development Team
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version ZenExpert 30 Dec 2025
- * copyright 2025 ZenExpert - https://zenexpert.com
+ * @version $Id: language_manager.php Jan 02 2026 ZenExpert $
+ * @copyright 2026 ZenExpert - https://zenexpert.com
  */
 
 require('includes/application_top.php');
@@ -132,11 +132,21 @@ if ($action == 'save' && !empty($current_file)) {
             $target_dir = DIR_FS_CATALOG . 'includes/languages/' . $active_template . '/';
             $target_file_path = $target_dir . basename($current_file);
         }
-        // case: standard/nested files (lang.about.php or modules/payment/lang.paypal.php)
-        // override location: includes/languages/english/YOUR_TEMPLATE/lang.about.php
+        // standard files (root, modules, extra defs) - insert the template name into the deepest directory
         else {
-            $target_file_path = $override_dir . $current_file;
-            $target_dir = dirname($target_file_path);
+
+            $path_parts = pathinfo($current_file);
+            $dir_part   = $path_parts['dirname']; // 'modules/shipping' or '.'
+            $file_part  = $path_parts['basename'];
+
+            if ($dir_part === '.') {
+                $dir_part = '';
+            } else {
+                $dir_part .= '/';
+            }
+
+            $target_dir = $base_lang_dir . $dir_part . $active_template . '/';
+            $target_file_path = $target_dir . $file_part;
         }
 
         // prepare content
@@ -370,12 +380,28 @@ if (is_dir($base_lang_dir)) {
     </div>
 
     <?php if (!empty($current_file) && file_exists($base_lang_dir . $current_file)) {
-        // Load RAW Data
+        // load raw data
         $raw_base_defs = get_raw_language_defs($base_lang_dir . $current_file);
 
+        $override_filepath = '';
+
+        if (strpos($current_file, '../') === 0) {
+            $override_filepath = DIR_FS_CATALOG . 'includes/languages/' . $active_template . '/' . basename($current_file);
+        } else {
+            // standard/module files
+            $path_parts = pathinfo($current_file);
+            $dir_part   = $path_parts['dirname'];
+            $file_part  = $path_parts['basename'];
+
+            if ($dir_part === '.') $dir_part = '';
+            else $dir_part .= '/';
+
+            $override_filepath = $base_lang_dir . $dir_part . $active_template . '/' . $file_part;
+        }
+
         $raw_override_defs = [];
-        if (file_exists($override_dir . $current_file)) {
-            $raw_override_defs = get_raw_language_defs($override_dir . $current_file);
+        if (file_exists($override_filepath)) {
+            $raw_override_defs = get_raw_language_defs($override_filepath);
         }
         ?>
 
