@@ -117,13 +117,16 @@ if ($action == 'save' && !empty($current_file)) {
     $save_mode = isset($_POST['save_mode']) ? $_POST['save_mode'] : 'basic';
 
     // we allow ".." ONLY if it refers to the main parent language file (e.g. ../english.php)
-    $is_valid_parent = ($current_file === '../english.php' || $current_file === '../lang.english.php');
+    $valid_parent_file = 'lang.' . $target_language . '.php';
+
+    // check if the requested file matches "../lang.target.php"
+    $is_valid_parent = ($current_file === '../' . $valid_parent_file);
+
     $is_traversal = (strpos($current_file, '..') !== false);
 
     if ($is_traversal && !$is_valid_parent) {
-        $messageStack->add('Invalid filename. Directory traversal detected.', 'error');
-    }
-    elseif (!file_exists($base_lang_dir . $current_file)) {
+        $messageStack->add('Invalid filename. You are trying to edit ' . htmlspecialchars($current_file) . ' but the system only allows ' . htmlspecialchars('../'.$valid_parent_file), 'error');
+    } elseif (!file_exists($base_lang_dir . $current_file)) {
         $messageStack->add('Error: Base file not found: ' . $base_lang_dir . $current_file, 'error');
     } else {
         // case: main language file (../lang.english.php)
@@ -431,8 +434,10 @@ if (is_dir($base_lang_dir)) {
             <?php } ?>
         </div>
 
-        <?php echo zen_draw_form('languageUpdate', FILENAME_LANGUAGE_MANAGER, 'action=save&file=' . $current_file . '&mode=' . $editor_mode, 'post'); ?>
+        <?php echo zen_draw_form('languageUpdate', FILENAME_LANGUAGE_MANAGER, 'action=save&file=' . $current_file, 'post'); ?>
         <input type="hidden" name="save_mode" value="<?php echo $editor_mode; ?>">
+        <input type="hidden" name="mode" value="<?php echo $editor_mode; ?>">
+        <input type="hidden" name="language_target" value="<?php echo $target_language; ?>">
 
         <table class="table table-bordered table-hover lang-table" id="langTable">
             <thead class="thead-dark">
