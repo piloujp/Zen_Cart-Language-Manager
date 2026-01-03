@@ -25,6 +25,14 @@ $override_dir  = DIR_FS_CATALOG . 'includes/languages/' . $target_language . '/'
 $action = (isset($_GET['action']) ? $_GET['action'] : '');
 $current_file = (isset($_GET['file']) ? $_GET['file'] : '');
 
+// main language file selected and language changed - adjust file to match
+if (strpos($current_file, '../lang.') === 0) {
+    $expected_loader = '../lang.' . $target_language . '.php';
+    if ($current_file !== $expected_loader) {
+        $current_file = $expected_loader;
+    }
+}
+
 // reset current file on language change
 if (isset($_GET['language_target']) && !isset($_GET['file'])) {
     $current_file = '';
