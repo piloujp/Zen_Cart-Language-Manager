@@ -9,7 +9,7 @@
 
 require('includes/application_top.php');
 
-$db_template = $db->Execute("SELECT template_dir FROM " . TABLE_TEMPLATE_SELECT . " WHERE template_language = 0");
+$db_template = $db->Execute("SELECT template_dir FROM " . DB_PREFIX . TABLE_TEMPLATE_SELECT . " WHERE template_language = 0");
 $active_template = $db_template->fields['template_dir'];
 
 // determine target language
@@ -19,8 +19,8 @@ $target_language = (isset($_REQUEST['language_target']) && preg_match('/^[a-z0-9
     : 'english';
 
 // dynamic paths
-$base_lang_dir = DIR_FS_CATALOG . 'includes/languages/' . $target_language . '/';
-$override_dir  = DIR_FS_CATALOG . 'includes/languages/' . $target_language . '/' . $active_template . '/';
+$base_lang_dir = DIR_FS_CATALOG_LANGUAGES . $target_language . '/';
+$override_dir  = DIR_FS_CATALOG_LANGUAGES . $target_language . '/' . $active_template . '/';
 
 $action = (isset($_GET['action']) ? $_GET['action'] : '');
 $current_file = (isset($_GET['file']) ? $_GET['file'] : '');
@@ -48,18 +48,18 @@ if ($action == 'create_language' && isset($_POST['new_language'])) {
     $source_lang = 'english';
 
     // catalog paths (frontend)
-    $cat_source_loader = DIR_FS_CATALOG . 'includes/languages/lang.' . $source_lang . '.php';
-    $cat_source_dir    = DIR_FS_CATALOG . 'includes/languages/' . $source_lang . '/';
+    $cat_source_loader = DIR_FS_CATALOG_LANGUAGES . 'lang.' . $source_lang . '.php';
+    $cat_source_dir    = DIR_FS_CATALOG_LANGUAGES . $source_lang . '/';
 
-    $cat_target_loader = DIR_FS_CATALOG . 'includes/languages/lang.' . $new_lang_name . '.php';
-    $cat_target_dir    = DIR_FS_CATALOG . 'includes/languages/' . $new_lang_name . '/';
+    $cat_target_loader = DIR_FS_CATALOG_LANGUAGES . 'lang.' . $new_lang_name . '.php';
+    $cat_target_dir    = DIR_FS_CATALOG_LANGUAGES . $new_lang_name . '/';
 
     // admin paths (backend)
-    $adm_source_loader = DIR_FS_ADMIN . 'includes/languages/lang.' . $source_lang . '.php';
-    $adm_source_dir    = DIR_FS_ADMIN . 'includes/languages/' . $source_lang . '/';
+    $adm_source_loader = DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'lang.' . $source_lang . '.php';
+    $adm_source_dir    = DIR_FS_ADMIN . DIR_WS_LANGUAGES . $source_lang . '/';
 
-    $adm_target_loader = DIR_FS_ADMIN . 'includes/languages/lang.' . $new_lang_name . '.php';
-    $adm_target_dir    = DIR_FS_ADMIN . 'includes/languages/' . $new_lang_name . '/';
+    $adm_target_loader = DIR_FS_ADMIN . DIR_WS_LANGUAGES .'lang.' . $new_lang_name . '.php';
+    $adm_target_dir    = DIR_FS_ADMIN . DIR_WS_LANGUAGES . $new_lang_name . '/';
 
     // validation
     $errors = [];
@@ -140,7 +140,7 @@ if ($action == 'save' && !empty($current_file)) {
         // case: main language file (../lang.english.php)
         // override location: includes/languages/YOUR_TEMPLATE/lang.english.php
         if ($is_valid_parent) {
-            $target_dir = DIR_FS_CATALOG . 'includes/languages/' . $active_template . '/';
+            $target_dir = DIR_FS_CATALOG_LANGUAGES . $active_template . '/';
             $target_file_path = $target_dir . basename($current_file);
         }
         // standard files (root, modules, extra defs) - insert the template name into the deepest directory
@@ -397,7 +397,7 @@ if (is_dir($base_lang_dir)) {
         $override_filepath = '';
 
         if (strpos($current_file, '../') === 0) {
-            $override_filepath = DIR_FS_CATALOG . 'includes/languages/' . $active_template . '/' . basename($current_file);
+            $override_filepath = DIR_FS_CATALOG_LANGUAGES . $active_template . '/' . basename($current_file);
         } else {
             // standard/module files
             $path_parts = pathinfo($current_file);
