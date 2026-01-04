@@ -348,13 +348,9 @@ if (is_dir($base_lang_dir)) {
                             <label><?php echo TEXT_TARGET_LANGUAGE; ?></label>
                             <select name="language_target" class="form-control" onchange="this.form.submit()">
                                 <?php
-                                $lang_dirs = glob(DIR_FS_CATALOG . 'includes/languages/*', GLOB_ONLYDIR);
-                                foreach($lang_dirs as $dir) {
-                                    $lname = basename($dir);
-
-                                    // skip 'classic' folder and standard dot folders
-                                    if ($lname === '.' || $lname === '..' || $lname === 'classic') continue;
-
+                                $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . DB_PREFIX . TABLE_LANGUAGES . ';');
+                                foreach($installed_languages_directories as $inst_lang_dir) {
+                                    $lname = $inst_lang_dir['directory'];
                                     $selected = ($target_language == $lname) ? 'selected' : '';
                                     echo "<option value='$lname' $selected>" . ucfirst($lname) . "</option>";
                                 }
