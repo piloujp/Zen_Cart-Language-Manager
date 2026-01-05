@@ -122,6 +122,23 @@ if ($action == 'create_language' && isset($_POST['new_language'])) {
 // save overrides
 if ($action == 'save' && !empty($current_file)) {
 
+    // decode JSON payload
+    $is_json_source = false;
+
+    if (isset($_POST['json_payload']) && !empty($_POST['json_payload'])) {
+        $clean_payload = stripslashes($_POST['json_payload']);
+        $clean_payload = str_replace(' ', '+', $clean_payload); // fix browser space encoding
+
+        $json_raw = base64_decode($clean_payload);
+        $decoded = json_decode($json_raw, true);
+
+        if (is_array($decoded)) {
+            $_POST['definitions'] = $decoded['definitions'] ?? [];
+            $_POST['use_default'] = $decoded['use_default'] ?? [];
+            $is_json_source = true; // skip extra processing later
+        }
+    }
+
     $save_mode = isset($_POST['save_mode']) ? $_POST['save_mode'] : 'basic';
 
     // we allow ".." ONLY if it refers to the main parent language file (e.g. ../english.php)
@@ -192,7 +209,13 @@ if ($action == 'save' && !empty($current_file)) {
 
                 // process input
                 $input = trim($input);
-                $input = stripslashes($input);
+
+                // ONLY strip slashes if using standard POST
+                // JSON data is already clean
+                if (!$is_json_source) {
+                    $input = stripslashes($input);
+                }
+
                 $input = htmlspecialchars_decode($input, ENT_QUOTES);
 
                 if ($save_mode === 'basic') {
@@ -442,6 +465,7 @@ if (is_dir($base_lang_dir)) {
         <input type="hidden" name="save_mode" value="<?php echo $editor_mode; ?>">
         <input type="hidden" name="mode" value="<?php echo $editor_mode; ?>">
         <input type="hidden" name="language_target" value="<?php echo $target_language; ?>">
+        <input type="hidden" name="json_payload" id="json_payload" value="">
 
         <table class="table table-bordered table-hover lang-table" id="langTable">
             <thead class="thead-dark">
