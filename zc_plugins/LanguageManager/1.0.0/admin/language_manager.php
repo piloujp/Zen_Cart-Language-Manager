@@ -9,7 +9,7 @@
 
 require('includes/application_top.php');
 
-$db_template = $db->Execute("SELECT template_dir FROM " . DB_PREFIX . TABLE_TEMPLATE_SELECT . " WHERE template_language = 0");
+$db_template = $db->Execute("SELECT template_dir FROM " . TABLE_TEMPLATE_SELECT . " WHERE template_language = 0");
 $active_template = $db_template->fields['template_dir'];
 
 // determine target language
@@ -371,7 +371,7 @@ if (is_dir($base_lang_dir)) {
                             <label><?php echo TEXT_TARGET_LANGUAGE; ?></label>
                             <select name="language_target" class="form-control" onchange="this.form.submit()">
                                 <?php
-                                $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . DB_PREFIX . TABLE_LANGUAGES . ';');
+                                $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . TABLE_LANGUAGES . ';');
                                 foreach($installed_languages_directories as $inst_lang_dir) {
                                     $lname = $inst_lang_dir['directory'];
                                     $selected = ($target_language == $lname) ? 'selected' : '';
