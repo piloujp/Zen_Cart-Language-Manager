@@ -9,14 +9,42 @@
 
 require('includes/application_top.php');
 
+// get current template
 $db_template = $db->Execute("SELECT template_dir FROM " . DB_PREFIX . TABLE_TEMPLATE_SELECT . " WHERE template_language = 0");
-$active_template = $db_template->fields['template_dir'];
+$store_default_template = $db_template->fields['template_dir'];
+
+// set template to edit
+$active_template = $store_default_template;
+
+// check if a different template is requested
+if (isset($_REQUEST['template_dir'])) {
+    $req_temp = preg_replace('/[^a-z0-9_-]/i', '', $_REQUEST['template_dir']);
+    // verify it exists
+    if (is_dir(DIR_FS_CATALOG . 'includes/templates/' . $req_temp)) {
+        $active_template = $req_temp;
+    }
+}
 
 // determine target language
 // check input, sanitize, and default to 'english'
 $target_language = (isset($_REQUEST['language_target']) && preg_match('/^[a-z0-9_-]+$/i', $_REQUEST['language_target']))
     ? $_REQUEST['language_target']
     : 'english';
+
+// check template association
+$associated_template = '';
+$lang_id_query = $db->Execute("SELECT languages_id FROM " . DB_PREFIX . TABLE_LANGUAGES . " WHERE directory = '" . zen_db_input($target_language) . "'");
+
+if (!$lang_id_query->EOF) {
+    $current_lang_id = $lang_id_query->fields['languages_id'];
+
+    // check if this language ID has a specific template assigned in template_select
+    $assoc_query = $db->Execute("SELECT template_dir FROM " . DB_PREFIX . TABLE_TEMPLATE_SELECT . " WHERE template_language = '" . (int)$current_lang_id . "'");
+
+    if (!$assoc_query->EOF) {
+        $associated_template = $assoc_query->fields['template_dir'];
+    }
+}
 
 // dynamic paths
 $base_lang_dir = DIR_FS_CATALOG_LANGUAGES . $target_language . '/';
@@ -43,9 +71,13 @@ $editor_mode = (isset($_REQUEST['mode']) && $_REQUEST['mode'] === 'advanced') ? 
 // create new language pack
 if ($action == 'create_language' && isset($_POST['new_language'])) {
 
-    // sanitize
+    // sanitize target
     $new_lang_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $_POST['new_language']));
-    $source_lang = 'english';
+
+    // sanitize source (default to english if missing)
+    $source_lang = (isset($_POST['source_language']) && preg_match('/^[a-z0-9_-]+$/i', $_POST['source_language']))
+        ? $_POST['source_language']
+        : 'english';
 
     // catalog paths (frontend)
     $cat_source_loader = DIR_FS_CATALOG_LANGUAGES . 'lang.' . $source_lang . '.php';
@@ -335,6 +367,19 @@ if (is_dir($base_lang_dir)) {
 <?php require DIR_WS_INCLUDES . 'header.php'; ?>
 <div class="container-fluid">
     <h1 class="page-header"><?php echo HEADING_TITLE; ?> <small>(<?php echo $active_template; ?>)</small></h1>
+    <?php if (!empty($associated_template) && $associated_template !== $active_template) { ?>
+        <div class="alert alert-warning" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <i class="fa fa-exclamation-triangle"></i>
+                <?php echo sprintf(TEXT_LINKED_LANGUAGE_SUGGESTION, ucfirst($target_language), $associated_template); ?>
+                <br>
+                <small><?php echo sprintf(TEXT_LINKED_LANGUAGE_CURRENT, $active_template); ?></small>
+            </div>
+            <a href="<?php echo zen_href_link(FILENAME_LANGUAGE_MANAGER, 'language_target=' . $target_language . '&template_dir=' . $associated_template . '&file=' . $current_file); ?>" class="btn btn-primary">
+                <i class="fa fa-refresh"></i> <?php echo sprintf(TEXT_LINKED_LANGUAGE_SWITCH, $associated_template); ?>
+            </a>
+        </div>
+    <?php } ?>
 
     <div class="row">
 
@@ -344,11 +389,30 @@ if (is_dir($base_lang_dir)) {
             </button>
 
             <div id="createLangCollapse" class="collapse text-left">
-                <div class="well well-sm"> <?php echo zen_draw_form('createLang', FILENAME_LANGUAGE_MANAGER, 'action=create_language', 'post'); ?>
+                <div class="well well-sm">
+                    <?php echo zen_draw_form('createLang', FILENAME_LANGUAGE_MANAGER, 'action=create_language', 'post'); ?>
 
-                    <label style="margin-bottom: 5px; display:block;"><?php echo TEXT_CLONE_LABEL; ?></label>
+                    <div class="form-group">
+                        <label><?php echo TEXT_NEW_LANGUAGE_SOURCE; ?></label>
+                        <select name="source_language" class="form-control">
+                            <?php
+                            // scan for available source languages
+                            $source_dirs = glob(DIR_FS_CATALOG_LANGUAGES . '*', GLOB_ONLYDIR);
+                            foreach($source_dirs as $dir) {
+                                $lname = basename($dir);
+                                // skip system/hidden folders
+                                if ($lname === '.' || $lname === '..' || $lname === 'classic') continue;
 
-                    <div style="display: flex; align-items: center;">
+                                // default to english being selected
+                                $selected = ($lname === 'english') ? 'selected' : '';
+                                echo "<option value='$lname' $selected>" . ucfirst($lname) . "</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><?php echo TEXT_NEW_LANGUAGE_TARGET; ?></label>
                         <div class="input-group" style="width: 100%;">
                             <input type="text" name="new_language" class="form-control" placeholder="<?php echo TEXT_PLACEHOLDER_LANG_CODE; ?>" pattern="[a-z0-9]+" title="<?php echo TEXT_TITLE_LOWERCASE; ?>" required>
                             <span class="input-group-btn">
@@ -359,6 +423,7 @@ if (is_dir($base_lang_dir)) {
                     </form>
                 </div>
             </div>
+
         </div>
 
         <div class="col-xs-12 col-md-6 col-md-pull-6">
@@ -367,42 +432,72 @@ if (is_dir($base_lang_dir)) {
                     <form action="<?php echo zen_href_link(FILENAME_LANGUAGE_MANAGER); ?>" method="get">
                         <input type="hidden" name="cmd" value="<?php echo FILENAME_LANGUAGE_MANAGER; ?>" />
 
-                        <div class="form-group">
-                            <label><?php echo TEXT_TARGET_LANGUAGE; ?></label>
-                            <select name="language_target" class="form-control" onchange="this.form.submit()">
-                                <?php
-                                $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . DB_PREFIX . TABLE_LANGUAGES . ';');
-                                foreach($installed_languages_directories as $inst_lang_dir) {
-                                    $lname = $inst_lang_dir['directory'];
-                                    $selected = ($target_language == $lname) ? 'selected' : '';
-                                    echo "<option value='$lname' $selected>" . ucfirst($lname) . "</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <div class="form-group">
+                                    <label><?php echo TEXT_TARGET_TEMPLATE; ?></label>
+                                    <select name="template_dir" class="form-control" onchange="this.form.submit()">
+                                        <?php
+                                        // scan template directories
+                                        $temp_dirs = glob(DIR_FS_CATALOG_TEMPLATES . '*', GLOB_ONLYDIR);
+                                        foreach($temp_dirs as $tdir) {
+                                            $tname = basename($tdir);
+                                            // skip template_default as it usually doesn't hold language overrides
+                                            if ($tname === 'template_default') continue;
 
-                        <div class="form-group mb-0">
-                            <label><?php echo TEXT_FILE_TO_EDIT; ?></label>
-                            <select name="file" onchange="this.form.submit()" class="form-control">
-                                <option value=""><?php echo TEXT_CHOOSE_FILE; ?></option>
-                                <?php foreach ($files_grouped as $group_label => $group_files) {
-                                    if (empty($group_files)) continue;
-                                    ?>
-                                    <optgroup label="<?php echo htmlspecialchars($group_label); ?>">
-                                        <?php foreach ($group_files as $f) { ?>
-                                            <option value="<?php echo $f; ?>" <?php echo ($current_file == $f ? 'selected' : ''); ?>>
-                                                <?php echo $f; ?>
-                                            </option>
+                                            $selected = ($active_template == $tname) ? 'selected' : '';
+                                            // indicate live store template
+                                            $label = $tname . ($tname === $store_default_template ? ' (' . TEXT_TARGET_TEMPLATE_LIVE . ')' : '');
+
+                                            echo "<option value='$tname' $selected>$label</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-4">
+                                <div class="form-group">
+                                    <label><?php echo TEXT_TARGET_LANGUAGE; ?></label>
+                                    <select name="language_target" class="form-control" onchange="this.form.submit()">
+                                        <?php
+                                        $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . DB_PREFIX . TABLE_LANGUAGES . ';');
+                                        foreach($installed_languages_directories as $inst_lang_dir) {
+                                            $lname = $inst_lang_dir['directory'];
+                                            $selected = ($target_language == $lname) ? 'selected' : '';
+                                            echo "<option value='$lname' $selected>" . ucfirst($lname) . "</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-4">
+                                <div class="form-group mb-0">
+                                    <label><?php echo TEXT_FILE_TO_EDIT; ?></label>
+                                    <select name="file" onchange="this.form.submit()" class="form-control">
+                                        <option value=""><?php echo TEXT_CHOOSE_FILE; ?></option>
+                                        <?php foreach ($files_grouped as $group_label => $group_files) {
+                                            if (empty($group_files)) continue;
+                                            ?>
+                                            <optgroup label="<?php echo htmlspecialchars($group_label); ?>">
+                                                <?php foreach ($group_files as $f) { ?>
+                                                    <option value="<?php echo $f; ?>" <?php echo ($current_file == $f ? 'selected' : ''); ?>>
+                                                        <?php echo $f; ?>
+                                                    </option>
+                                                <?php } ?>
+                                            </optgroup>
                                         <?php } ?>
-                                    </optgroup>
-                                <?php } ?>
-                            </select>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <?php if ($editor_mode === 'advanced') { ?>
                             <input type="hidden" name="mode" value="advanced">
                         <?php } ?>
                     </form>
+
                 </div>
             </div>
         </div>
@@ -466,6 +561,7 @@ if (is_dir($base_lang_dir)) {
         <input type="hidden" name="mode" value="<?php echo $editor_mode; ?>">
         <input type="hidden" name="language_target" value="<?php echo $target_language; ?>">
         <input type="hidden" name="json_payload" id="json_payload" value="">
+        <input type="hidden" name="template_dir" value="<?php echo $active_template; ?>">
 
         <table class="table table-bordered table-hover lang-table" id="langTable">
             <thead class="thead-dark">
