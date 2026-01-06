@@ -6,12 +6,15 @@ $define = [
 
     // Create Pack Section
     'BUTTON_CREATE_NEW_PACK' => '新しい言語パックを作成する',
-    'TEXT_CLONE_LABEL' => '<strong>英語</strong>を新しい言語に複製します：',
+    'TEXT_NEW_LANGUAGE_SOURCE' => 'ソース言語:',
+    'TEXT_NEW_LANGUAGE_TARGET' => '対象言語（小文字）：',
     'TEXT_PLACEHOLDER_LANG_CODE' => '例：french',
     'TEXT_TITLE_LOWERCASE' => '小文字のみ',
     'BUTTON_CREATE' => '作成',
 
     // Selector Section
+    'TEXT_TARGET_TEMPLATE' => 'ターゲットテンプレート：',
+    'TEXT_TARGET_TEMPLATE_LIVE' => 'ライブストア',
     'TEXT_TARGET_LANGUAGE' => '言語：',
     'TEXT_FILE_TO_EDIT' => '編集するファイル：',
     'TEXT_CHOOSE_FILE' => '-- ファイルを選択 --',
@@ -20,7 +23,11 @@ $define = [
     'TEXT_MODE_BASIC' => '基本モード',
     'TEXT_MODE_ADVANCED' => '上級者 / 開発者',
     'TEXT_SEARCH_PLACEHOLDER' => '検索キーまたはテキスト...',
+    'TEXT_LINKED_LANGUAGE_SUGGESTION' => '<strong>提案：</strong>言語　<code>%s</code> は、ストア設定の <strong>%s</strong> テンプレートにリンクされています。',
+    'TEXT_LINKED_LANGUAGE_CURRENT' => '現在、次のオーバーライドを編集しています： <em>%s</em>',
+    'TEXT_LINKED_LANGUAGE_SWITCH' => '%s に切り替える',
 
+    // Legends
     'TEXT_LEGEND_BASIC_TITLE' => '基本モード：',
     'TEXT_LEGEND_BASIC_DESC' => '通常通りテキストを入力してください。引用符と特殊文字は自動的に処理されます。',
     'TEXT_LEGEND_BASIC_NOTE' => '注：複雑な値（定数など）は、エラー防止のため、このモードではロックされます。編集するには、「詳細」モードに切り替えてください。',
