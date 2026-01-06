@@ -10,7 +10,7 @@
 require('includes/application_top.php');
 
 // get current template
-$db_template = $db->Execute("SELECT template_dir FROM " . DB_PREFIX . TABLE_TEMPLATE_SELECT . " WHERE template_language = 0");
+$db_template = $db->Execute("SELECT template_dir FROM " . TABLE_TEMPLATE_SELECT . " WHERE template_language = 0");
 $store_default_template = $db_template->fields['template_dir'];
 
 // set template to edit
@@ -20,7 +20,7 @@ $active_template = $store_default_template;
 if (isset($_REQUEST['template_dir'])) {
     $req_temp = preg_replace('/[^a-z0-9_-]/i', '', $_REQUEST['template_dir']);
     // verify it exists
-    if (is_dir(DIR_FS_CATALOG . 'includes/templates/' . $req_temp)) {
+    if (is_dir(DIR_FS_CATALOG_TEMPLATES . $req_temp)) {
         $active_template = $req_temp;
     }
 }
@@ -33,13 +33,13 @@ $target_language = (isset($_REQUEST['language_target']) && preg_match('/^[a-z0-9
 
 // check template association
 $associated_template = '';
-$lang_id_query = $db->Execute("SELECT languages_id FROM " . DB_PREFIX . TABLE_LANGUAGES . " WHERE directory = '" . zen_db_input($target_language) . "'");
+$lang_id_query = $db->Execute("SELECT languages_id FROM " . TABLE_LANGUAGES . " WHERE directory = '" . zen_db_input($target_language) . "'");
 
 if (!$lang_id_query->EOF) {
     $current_lang_id = $lang_id_query->fields['languages_id'];
 
     // check if this language ID has a specific template assigned in template_select
-    $assoc_query = $db->Execute("SELECT template_dir FROM " . DB_PREFIX . TABLE_TEMPLATE_SELECT . " WHERE template_language = '" . (int)$current_lang_id . "'");
+    $assoc_query = $db->Execute("SELECT template_dir FROM " . TABLE_TEMPLATE_SELECT . " WHERE template_language = '" . (int)$current_lang_id . "'");
 
     if (!$assoc_query->EOF) {
         $associated_template = $assoc_query->fields['template_dir'];
