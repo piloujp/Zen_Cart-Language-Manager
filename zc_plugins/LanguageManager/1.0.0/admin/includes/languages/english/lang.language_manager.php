@@ -27,7 +27,7 @@ $define = [
     'TEXT_LINKED_LANGUAGE_CURRENT' => 'You are currently editing overrides for: <em>%s</em>',
     'TEXT_LINKED_LANGUAGE_SWITCH' => 'Switch to %s',
 
-     // Legends
+    // Legends
     'TEXT_LEGEND_BASIC_TITLE' => 'Basic Mode:',
     'TEXT_LEGEND_BASIC_DESC' => 'Enter text normally. Quotes and special characters are handled automatically.',
     'TEXT_LEGEND_BASIC_NOTE' => 'Note: Complex values (like Constants) are locked in this mode to prevent errors. Switch to Advanced to edit them.',
@@ -61,6 +61,10 @@ $define = [
     'TEXT_SUCCESS_SAVED' => 'Successfully saved %s overrides to ',
     'TEXT_OVERRIDES_REMOVED' => 'All overrides removed. File deleted.',
     'PHP_SYNTAX_ERROR' => ': Syntax Error',
+    'ERROR_PLUGIN_PATH_INVALID' => 'Security Error: Invalid Plugin Path',
+    'ERROR_PLUGIN_PATH_INVALID_RELATIVE' => 'Error: Could not determine relative path structure for plugin file.',
+    'ERROR_INVALID_FILE_EDIT' => 'Invalid filename. You are trying to edit %s but the system only allows %s',
+    'ERROR_BASE_FILE_NOT_FOUND' => 'Error: Base language file not found: %s',
 
     'SUCCESS_CATALOG_CREATED' => 'Catalog files created successfully.',
     'SUCCESS_ADMIN_CREATED' => 'Admin files created successfully.',

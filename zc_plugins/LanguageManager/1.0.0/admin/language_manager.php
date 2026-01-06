@@ -27,9 +27,7 @@ if (isset($_REQUEST['template_dir'])) {
 
 // determine target language
 // check input, sanitize, and default to 'english'
-$target_language = (isset($_REQUEST['language_target']) && preg_match('/^[a-z0-9_-]+$/i', $_REQUEST['language_target']))
-    ? $_REQUEST['language_target']
-    : 'english';
+$target_language = (isset($_REQUEST['language_target']) && preg_match('/^[a-z0-9_-]+$/i', $_REQUEST['language_target'])) ? $_REQUEST['language_target'] : 'english';
 
 // check template association
 $associated_template = '';
@@ -48,7 +46,7 @@ if (!$lang_id_query->EOF) {
 
 // dynamic paths
 $base_lang_dir = DIR_FS_CATALOG_LANGUAGES . $target_language . '/';
-$override_dir  = DIR_FS_CATALOG_LANGUAGES . $target_language . '/' . $active_template . '/';
+$override_dir = DIR_FS_CATALOG_LANGUAGES . $target_language . '/' . $active_template . '/';
 
 $action = (isset($_GET['action']) ? $_GET['action'] : '');
 $current_file = (isset($_GET['file']) ? $_GET['file'] : '');
@@ -81,39 +79,36 @@ if ($action == 'create_language' && isset($_POST['new_language'])) {
 
     // catalog paths (frontend)
     $cat_source_loader = DIR_FS_CATALOG_LANGUAGES . 'lang.' . $source_lang . '.php';
-    $cat_source_dir    = DIR_FS_CATALOG_LANGUAGES . $source_lang . '/';
+    $cat_source_dir = DIR_FS_CATALOG_LANGUAGES . $source_lang . '/';
 
     $cat_target_loader = DIR_FS_CATALOG_LANGUAGES . 'lang.' . $new_lang_name . '.php';
-    $cat_target_dir    = DIR_FS_CATALOG_LANGUAGES . $new_lang_name . '/';
+    $cat_target_dir = DIR_FS_CATALOG_LANGUAGES . $new_lang_name . '/';
 
     // admin paths (backend)
     $adm_source_loader = DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'lang.' . $source_lang . '.php';
-    $adm_source_dir    = DIR_FS_ADMIN . DIR_WS_LANGUAGES . $source_lang . '/';
+    $adm_source_dir = DIR_FS_ADMIN . DIR_WS_LANGUAGES . $source_lang . '/';
 
-    $adm_target_loader = DIR_FS_ADMIN . DIR_WS_LANGUAGES .'lang.' . $new_lang_name . '.php';
-    $adm_target_dir    = DIR_FS_ADMIN . DIR_WS_LANGUAGES . $new_lang_name . '/';
+    $adm_target_loader = DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'lang.' . $new_lang_name . '.php';
+    $adm_target_dir = DIR_FS_ADMIN . DIR_WS_LANGUAGES . $new_lang_name . '/';
 
     // validation
     $errors = [];
 
     if (empty($new_lang_name)) {
         $errors[] = ERROR_LANGUAGE_NAME_REQUIRED;
-    }
-    // check if target already exists (catalog)
+    } // check if target already exists (catalog)
     elseif (file_exists($cat_target_loader) || is_dir($cat_target_dir)) {
         $errors[] = sprintf(ERROR_CATALOG_LANG_EXISTS, $new_lang_name);
-    }
-    // check if source exists (catalog)
+    } // check if source exists (catalog)
     elseif (!file_exists($cat_source_loader) || !is_dir($cat_source_dir)) {
         $errors[] = sprintf(ERROR_SOURCE_CATALOG_NOT_FOUND, $source_lang);
-    }
-    // check if source exists (admin)
+    } // check if source exists (admin)
     elseif (!file_exists($adm_source_loader) || !is_dir($adm_source_dir)) {
         $errors[] = sprintf(ERROR_SOURCE_ADMIN_NOT_FOUND, $source_lang);
     }
 
     if (!empty($errors)) {
-        foreach($errors as $err) $messageStack->add($err, 'error');
+        foreach ($errors as $err) $messageStack->add($err, 'error');
     } else {
 
         // catalog clone
@@ -173,42 +168,85 @@ if ($action == 'save' && !empty($current_file)) {
 
     $save_mode = isset($_POST['save_mode']) ? $_POST['save_mode'] : 'basic';
 
-    // we allow ".." ONLY if it refers to the main parent language file (e.g. ../english.php)
-    $valid_parent_file = 'lang.' . $target_language . '.php';
+    // calculate target file path
+    $target_file_path = '';
+    $is_plugin_file = (strpos($current_file, 'zc_plugins') !== false);
+    $valid_parent_file = 'lang.' . $target_language . '.php'; // needed for error messages
 
-    // check if the requested file matches "../lang.target.php"
-    $is_valid_parent = ($current_file === '../' . $valid_parent_file);
+    // handle encapsulated plugin files
+    if ($is_plugin_file) {
+        // security check: must be in zc_plugins directory
+        if (strpos(realpath($current_file), realpath(DIR_FS_CATALOG . 'zc_plugins')) === false) {
+            $messageStack->add(ERROR_PLUGIN_PATH_INVALID, 'error');
+            // stop processing
+            $current_file = '';
+        } else {
+            // extract relative path for target
+            $search_str = '/includes/languages/' . $target_language . '/';
+            $normalized_current = str_replace('\\', '/', $current_file);
+            $pos = strpos($normalized_current, $search_str);
 
-    $is_traversal = (strpos($current_file, '..') !== false);
+            if ($pos !== false) {
+                // get the path AFTER languages/english/ (e.g. "modules/payment/lang.myplugin.php")
+                $rel_path = substr($normalized_current, $pos + strlen($search_str));
+                $path_parts = pathinfo($rel_path);
 
-    if ($is_traversal && !$is_valid_parent) {
-        $messageStack->add('Invalid filename. You are trying to edit ' . htmlspecialchars($current_file) . ' but the system only allows ' . htmlspecialchars('../'.$valid_parent_file), 'error');
-    } elseif (!file_exists($base_lang_dir . $current_file)) {
-        $messageStack->add('Error: Base file not found: ' . $base_lang_dir . $current_file, 'error');
-    } else {
-        // case: main language file (../lang.english.php)
-        // override location: includes/languages/YOUR_TEMPLATE/lang.english.php
-        if ($is_valid_parent) {
-            $target_dir = DIR_FS_CATALOG_LANGUAGES . $active_template . '/';
-            $target_file_path = $target_dir . basename($current_file);
-        }
-        // standard files (root, modules, extra defs) - insert the template name into the deepest directory
-        else {
-
-            $path_parts = pathinfo($current_file);
-            $dir_part   = $path_parts['dirname']; // 'modules/shipping' or '.'
-            $file_part  = $path_parts['basename'];
-
-            if ($dir_part === '.') {
-                $dir_part = '';
+                if ($path_parts['dirname'] === '.') {
+                    // plugin root file (e.g. lang.myplugin.php) -> main template dir
+                    $target_dir = DIR_FS_CATALOG_LANGUAGES . $active_template . '/';
+                    $target_file_path = $target_dir . $path_parts['basename'];
+                } else {
+                    // plugin module file -> module template dir
+                    // e.g. includes/languages/english/modules/payment/YOUR_TEMPLATE/lang.myplugin.php
+                    $target_dir = $base_lang_dir . $path_parts['dirname'] . '/' . $active_template . '/';
+                    $target_file_path = $target_dir . $path_parts['basename'];
+                }
             } else {
-                $dir_part .= '/';
+                $messageStack->add(ERROR_PLUGIN_PATH_INVALID_RELATIVE, 'error');
+                $current_file = '';
             }
-
-            $target_dir = $base_lang_dir . $dir_part . $active_template . '/';
-            $target_file_path = $target_dir . $file_part;
         }
+    } // standard file
+    else {
+        // we allow ".." ONLY if it refers to the main parent language file (e.g. ../english.php)
+        $is_valid_parent = ($current_file === '../' . $valid_parent_file);
+        $is_traversal = (strpos($current_file, '..') !== false);
 
+        if ($is_traversal && !$is_valid_parent) {
+            $messageStack->add(sprintf(ERROR_INVALID_FILE_EDIT, htmlspecialchars($current_file), htmlspecialchars('../' . $valid_parent_file)), 'error');
+            $current_file = ''; // stop processing
+        } elseif (!file_exists($base_lang_dir . $current_file)) {
+            $messageStack->add(sprintf(ERROR_BASE_FILE_NOT_FOUND . $base_lang_dir . $current_file), 'error');
+            $current_file = ''; // stop processing
+        } else {
+            // case: main language file (../lang.english.php)
+            // override location: includes/languages/YOUR_TEMPLATE/lang.english.php
+            if ($is_valid_parent) {
+                $target_dir = DIR_FS_CATALOG_LANGUAGES . $active_template . '/';
+                $target_file_path = $target_dir . basename($current_file);
+            } // standard files (root, modules, extra defs) - insert the template name into the deepest directory
+            else {
+                $path_parts = pathinfo($current_file);
+                $dir_part = $path_parts['dirname'];
+                $file_part = $path_parts['basename'];
+
+                if ($dir_part === '.') {
+                    $dir_part = '';
+                } else {
+                    $dir_part .= '/';
+                }
+
+                $target_dir = $base_lang_dir . $dir_part . $active_template . '/';
+                $target_file_path = $target_dir . $file_part;
+            }
+        }
+    }
+
+    // stop if we hit an error above
+    if (empty($current_file) || empty($target_file_path)) {
+        // just break out
+        // the page will reload showing the errors added to messageStack
+    } else {
         // prepare content
         // get the original header (preserve $locales, @setlocale, etc)
         $header_content = get_file_header($base_lang_dir . $current_file);
@@ -263,7 +301,7 @@ if ($action == 'save' && !empty($current_file)) {
                     }
 
                     if (!is_valid_php_expression($input)) {
-                        $errors[] = "<strong>$key</strong>". PHP_SYNTAX_ERROR;
+                        $errors[] = "<strong>$key</strong>" . PHP_SYNTAX_ERROR;
                         continue;
                     }
                     $file_content .= "  '$key' => " . $input . ",\n";
@@ -295,8 +333,7 @@ if ($action == 'save' && !empty($current_file)) {
                     } else {
                         $messageStack->add(ERROR_CHECK_PERMISSIONS . $target_dir, 'error');
                     }
-                }
-                // if all overrides were removed (empty), delete the override file to revert to core
+                } // if all overrides were removed (empty), delete the override file to revert to core
                 elseif (file_exists($target_file_path)) {
                     unlink($target_file_path);
                     $messageStack->add(TEXT_OVERRIDES_REMOVED, 'success');
@@ -333,8 +370,7 @@ if (is_dir($base_lang_dir)) {
     foreach ($root_files as $f) {
         if ($f === 'lang.' . $target_language . '.php') {
             $files_grouped['Main Language File'][] = $f;
-        }
-        elseif (strpos($f, 'lang.') === 0) {
+        } elseif (strpos($f, 'lang.') === 0) {
             $files_grouped['Page Definitions'][] = $f;
         }
     }
@@ -353,6 +389,49 @@ if (is_dir($base_lang_dir)) {
             $key = 'Modules: ' . ucwords(str_replace('_', ' ', $type));
             if (is_dir($path)) {
                 $files_grouped[$key] = scan_lang_dir($path, 'modules/' . $type . '/');
+            }
+        }
+    }
+
+    // scan zc_plugins (Encapsulated Plugins)
+    // structure expected: zc_plugins/Name/Version/catalog/includes/languages/english/...
+    $plugins_dir = DIR_FS_CATALOG . 'zc_plugins';
+    if (is_dir($plugins_dir)) {
+        $plugin_folders = glob($plugins_dir . '/*', GLOB_ONLYDIR);
+
+        foreach ($plugin_folders as $p_folder) {
+            $p_name = basename($p_folder);
+
+            // find highest version
+            $versions = glob($p_folder . '/*', GLOB_ONLYDIR);
+            if (empty($versions)) continue;
+
+            usort($versions, function ($a, $b) {
+                return version_compare(basename($b), basename($a));
+            });
+            $latest_version_path = $versions[0];
+
+            // check language directory
+            $plugin_lang_root = $latest_version_path . '/catalog/includes/languages/' . $target_language . '/';
+
+            if (is_dir($plugin_lang_root)) {
+                $group_key = 'Plugin: ' . $p_name . ' (' . basename($latest_version_path) . ')';
+                $files_grouped[$group_key] = [];
+
+                // recursive scan
+                $iter = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($plugin_lang_root, RecursiveDirectoryIterator::SKIP_DOTS),
+                    RecursiveIteratorIterator::SELF_FIRST
+                );
+
+                foreach ($iter as $path => $dir) {
+                    if ($dir->isFile() && $dir->getExtension() === 'php') {
+                        // store FULL PATH for plugins to avoid ambiguity
+                        // normalize slashes for Windows/Linux consistency
+                        $full_path = str_replace('\\', '/', $path);
+                        $files_grouped[$group_key][] = $full_path;
+                    }
+                }
             }
         }
     }
@@ -396,12 +475,10 @@ if (is_dir($base_lang_dir)) {
                         <label><?php echo TEXT_NEW_LANGUAGE_SOURCE; ?></label>
                         <select name="source_language" class="form-control">
                             <?php
-                            // scan for available source languages
-                            $source_dirs = glob(DIR_FS_CATALOG_LANGUAGES . '*', GLOB_ONLYDIR);
-                            foreach($source_dirs as $dir) {
-                                $lname = basename($dir);
-                                // skip system/hidden folders
-                                if ($lname === '.' || $lname === '..' || $lname === 'classic') continue;
+                            $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . TABLE_LANGUAGES . ';');
+
+                            foreach ($installed_languages_directories as $inst_lang_dir) {
+                                $lname = $inst_lang_dir['directory'];
 
                                 // default to english being selected
                                 $selected = ($lname === 'english') ? 'selected' : '';
@@ -430,7 +507,7 @@ if (is_dir($base_lang_dir)) {
             <div class="card mb-3">
                 <div class="card-body bg-light">
                     <form action="<?php echo zen_href_link(FILENAME_LANGUAGE_MANAGER); ?>" method="get">
-                        <input type="hidden" name="cmd" value="<?php echo FILENAME_LANGUAGE_MANAGER; ?>" />
+                        <input type="hidden" name="cmd" value="<?php echo FILENAME_LANGUAGE_MANAGER; ?>"/>
 
                         <div class="row">
                             <div class="col-sm-4">
@@ -440,7 +517,7 @@ if (is_dir($base_lang_dir)) {
                                         <?php
                                         // scan template directories
                                         $temp_dirs = glob(DIR_FS_CATALOG_TEMPLATES . '*', GLOB_ONLYDIR);
-                                        foreach($temp_dirs as $tdir) {
+                                        foreach ($temp_dirs as $tdir) {
                                             $tname = basename($tdir);
                                             // skip template_default as it usually doesn't hold language overrides
                                             if ($tname === 'template_default') continue;
@@ -461,8 +538,8 @@ if (is_dir($base_lang_dir)) {
                                     <label><?php echo TEXT_TARGET_LANGUAGE; ?></label>
                                     <select name="language_target" class="form-control" onchange="this.form.submit()">
                                         <?php
-                                        $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . DB_PREFIX . TABLE_LANGUAGES . ';');
-                                        foreach($installed_languages_directories as $inst_lang_dir) {
+                                        $installed_languages_directories = $db->Execute('SELECT DISTINCT directory FROM ' . TABLE_LANGUAGES . ';');
+                                        foreach ($installed_languages_directories as $inst_lang_dir) {
                                             $lname = $inst_lang_dir['directory'];
                                             $selected = ($target_language == $lname) ? 'selected' : '';
                                             echo "<option value='$lname' $selected>" . ucfirst($lname) . "</option>";
@@ -474,16 +551,36 @@ if (is_dir($base_lang_dir)) {
 
                             <div class="col-sm-4">
                                 <div class="form-group mb-0">
-                                    <label><?php echo TEXT_FILE_TO_EDIT; ?></label>
+                                    <?php echo TEXT_FILE_TO_EDIT; ?>
                                     <select name="file" onchange="this.form.submit()" class="form-control">
                                         <option value=""><?php echo TEXT_CHOOSE_FILE; ?></option>
-                                        <?php foreach ($files_grouped as $group_label => $group_files) {
+                                        <?php
+                                        foreach ($files_grouped as $group_label => $group_files) {
                                             if (empty($group_files)) continue;
                                             ?>
                                             <optgroup label="<?php echo htmlspecialchars($group_label); ?>">
-                                                <?php foreach ($group_files as $f) { ?>
-                                                    <option value="<?php echo $f; ?>" <?php echo ($current_file == $f ? 'selected' : ''); ?>>
-                                                        <?php echo $f; ?>
+                                                <?php foreach ($group_files as $f) {
+                                                    $display_name = $f;
+
+                                                    // make plugin path readable
+                                                    // turn: .../zc_plugins/PluginName/1.0.0/catalog/includes/languages/english/modules/payment/lang.plugin.php
+                                                    // into: modules/payment/lang.plugin.php
+                                                    if (strpos($f, 'zc_plugins') !== false) {
+                                                        $search = '/includes/languages/' . $target_language . '/';
+                                                        // normalize slashes for Windows/Linux safety
+                                                        $norm_f = str_replace('\\', '/', $f);
+                                                        $pos = strpos($norm_f, $search);
+
+                                                        if ($pos !== false) {
+                                                            $display_name = substr($norm_f, $pos + strlen($search));
+                                                        } else {
+                                                            // fallback: just show filename
+                                                            $display_name = basename($f);
+                                                        }
+                                                    }
+                                                    ?>
+                                                    <option value="<?php echo $f; ?>" <?php echo($current_file == $f ? 'selected' : ''); ?>>
+                                                        <?php echo $display_name; ?>
                                                     </option>
                                                 <?php } ?>
                                             </optgroup>
@@ -504,19 +601,47 @@ if (is_dir($base_lang_dir)) {
 
     </div>
 
-    <?php if (!empty($current_file) && file_exists($base_lang_dir . $current_file)) {
-        // load raw data
-        $raw_base_defs = get_raw_language_defs($base_lang_dir . $current_file);
+    <?php
+    // load selected file definitions
+    $is_plugin_file = (strpos($current_file, 'zc_plugins') !== false);
+    $source_file_path = $is_plugin_file ? $current_file : $base_lang_dir . $current_file;
 
+    if (!empty($current_file) && file_exists($source_file_path)) {
+
+        // base definitions
+        $raw_base_defs = get_raw_language_defs($source_file_path);
+
+        // calculate override path
         $override_filepath = '';
 
-        if (strpos($current_file, '../') === 0) {
+        if ($is_plugin_file) {
+            // extract relative path for plugins
+            $search_str = '/includes/languages/' . $target_language . '/';
+            $normalized_current = str_replace('\\', '/', $current_file);
+            $pos = strpos($normalized_current, $search_str);
+
+            if ($pos !== false) {
+                $rel_path = substr($normalized_current, $pos + strlen($search_str));
+                $path_parts = pathinfo($rel_path);
+
+                if ($path_parts['dirname'] === '.') {
+                    // plugin root
+                    $override_filepath = DIR_FS_CATALOG_LANGUAGES . $active_template . '/' . $path_parts['basename'];
+                } else {
+                    // plugin module
+                    $override_filepath = $base_lang_dir . $path_parts['dirname'] . '/' . $active_template . '/' . $path_parts['basename'];
+                }
+            }
+        }
+        // case: main language file (../lang.english.php)
+        // override location: includes/languages/YOUR_TEMPLATE/lang.english.php
+        elseif (strpos($current_file, '../') === 0) {
             $override_filepath = DIR_FS_CATALOG_LANGUAGES . $active_template . '/' . basename($current_file);
-        } else {
-            // standard/module files
+        } // standard files (root, modules, extra defs) - insert the template name into the deepest directory
+        else {
             $path_parts = pathinfo($current_file);
-            $dir_part   = $path_parts['dirname'];
-            $file_part  = $path_parts['basename'];
+            $dir_part = $path_parts['dirname'];
+            $file_part = $path_parts['basename'];
 
             if ($dir_part === '.') $dir_part = '';
             else $dir_part .= '/';
@@ -524,9 +649,13 @@ if (is_dir($base_lang_dir)) {
             $override_filepath = $base_lang_dir . $dir_part . $active_template . '/' . $file_part;
         }
 
+        // load overrides (if they exist)
         $raw_override_defs = [];
-        if (file_exists($override_filepath)) {
+        $has_override_file = false;
+
+        if (!empty($override_filepath) && file_exists($override_filepath)) {
             $raw_override_defs = get_raw_language_defs($override_filepath);
+            $has_override_file = true;
         }
         ?>
 
@@ -568,7 +697,7 @@ if (is_dir($base_lang_dir)) {
             <tr>
                 <th class="col-key"><?php echo TABLE_HEADING_KEY; ?></th>
                 <th class="col-orig"><?php echo TABLE_HEADING_ORIGINAL; ?></th>
-                <th class="col-edit"><?php echo TABLE_HEADING_OVERRIDE; ?> <?php echo ($editor_mode == 'advanced' ? TEXT_RAW_PHP : ''); ?></th>
+                <th class="col-edit"><?php echo TABLE_HEADING_OVERRIDE; ?><?php echo($editor_mode == 'advanced' ? TEXT_RAW_PHP : ''); ?></th>
             </tr>
             </thead>
             <tbody>
@@ -618,23 +747,23 @@ if (is_dir($base_lang_dir)) {
 
                             <?php } else { ?>
                                 <textarea
-                                    name="definitions[<?php echo $key; ?>]"
-                                    id="input_<?php echo $key; ?>"
-                                    data-key="<?php echo $key; ?>"
-                                    class="form-control definition-input <?php echo $has_override ? 'has-override' : ''; ?>"
-                                    placeholder="<?php echo htmlspecialchars($placeholder); ?>"
-                                    style="<?php echo ($editor_mode == 'advanced' ? 'font-family:monospace; color:#d63384;' : ''); ?>"
+                                        name="definitions[<?php echo $key; ?>]"
+                                        id="input_<?php echo $key; ?>"
+                                        data-key="<?php echo $key; ?>"
+                                        class="form-control definition-input <?php echo $has_override ? 'has-override' : ''; ?>"
+                                        placeholder="<?php echo htmlspecialchars($placeholder); ?>"
+                                        style="<?php echo($editor_mode == 'advanced' ? 'font-family:monospace; color:#d63384;' : ''); ?>"
                                 ><?php echo htmlspecialchars($display_val); ?></textarea>
                             <?php } ?>
 
                             <label class="use-default-label" title="<?php echo TEXT_USE_DEFAULT_LABEL; ?>">
                                 <input
-                                    type="checkbox"
-                                    name="use_default[<?php echo $key; ?>]"
-                                    id="default_cb_<?php echo $key; ?>"
-                                    data-key="<?php echo $key; ?>"
-                                    class="default-checkbox"
-                                    value="1"
+                                        type="checkbox"
+                                        name="use_default[<?php echo $key; ?>]"
+                                        id="default_cb_<?php echo $key; ?>"
+                                        data-key="<?php echo $key; ?>"
+                                        class="default-checkbox"
+                                        value="1"
                                     <?php echo $is_default_checked ? 'checked' : ''; ?>
                                 >
                                 <?php echo TEXT_USE_DEFAULT; ?>
