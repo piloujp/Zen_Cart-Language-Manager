@@ -6,12 +6,15 @@ $define = [
 
     // Create Pack Section
     'BUTTON_CREATE_NEW_PACK' => 'Créer un nouveau pack de langue',
-    'TEXT_CLONE_LABEL' => 'Cloner la version <strong>anglaise</strong> dans une nouvelle langue :',
+    'TEXT_NEW_LANGUAGE_SOURCE' => 'Langue source :',
+    'TEXT_NEW_LANGUAGE_TARGET' => 'Langue cible (en minuscules) :',
     'TEXT_PLACEHOLDER_LANG_CODE' => 'par exemple : french',
     'TEXT_TITLE_LOWERCASE' => 'Lettres minuscules uniquement',
     'BUTTON_CREATE' => 'Créer',
 
     // Selector Section
+    'TEXT_TARGET_TEMPLATE' => 'Modèle :',
+    'TEXT_TARGET_TEMPLATE_LIVE' => 'Actif par défaut',
     'TEXT_TARGET_LANGUAGE' => 'Langue :',
     'TEXT_FILE_TO_EDIT' => 'Fichier à modifier :',
     'TEXT_CHOOSE_FILE' => '-- Choisir un fichier --',
@@ -20,7 +23,11 @@ $define = [
     'TEXT_MODE_BASIC' => 'Mode de base',
     'TEXT_MODE_ADVANCED' => 'Avancé / Développeur',
     'TEXT_SEARCH_PLACEHOLDER' => 'Mots clés ou texte de recherche...',
+    'TEXT_LINKED_LANGUAGE_SUGGESTION' => '<strong>Suggestion :</strong> La langue <code>%s</code> est liée au modèle <strong>%s</strong> dans les paramètres de votre boutique.',
+    'TEXT_LINKED_LANGUAGE_CURRENT' => 'Vous êtes en train de modifier les paramètres de remplacement pour : <em>%s</em>',
+    'TEXT_LINKED_LANGUAGE_SWITCH' => 'Passez en %s',
 
+    // Legends
     'TEXT_LEGEND_BASIC_TITLE' => 'Mode de base :',
     'TEXT_LEGEND_BASIC_DESC' => 'Saisissez votre texte normalement. Les guillemets et les caractères spéciaux sont gérés automatiquement.',
     'TEXT_LEGEND_BASIC_NOTE' => 'Remarque : Les valeurs complexes (comme les constantes) sont verrouillées dans ce mode afin d’éviter les erreurs. Passez en mode Avancé pour les modifier.',
@@ -54,6 +61,10 @@ $define = [
     'TEXT_SUCCESS_SAVED' => 'Les modifications %s ont été enregistrées avec succès dans ',
     'TEXT_OVERRIDES_REMOVED' => 'Toutes les modifications ont été supprimées. Fichier supprimé.',
     'PHP_SYNTAX_ERROR' => ' : Erreur de syntaxe',
+    'ERROR_PLUGIN_PATH_INVALID' => 'Erreur de sécurité : Chemin d’accès au plugin invalide',
+    'ERROR_PLUGIN_PATH_INVALID_RELATIVE' => 'Erreur : Impossible de déterminer la structure du chemin relatif au fichier du plugin.',
+    'ERROR_INVALID_FILE_EDIT' => 'Nom de fichier invalide. Vous essayez de modifier %1$s, mais le système n’autorise que %2$s.',
+    'ERROR_BASE_FILE_NOT_FOUND' => 'Erreur : Fichier de langue de base introuvable : %s',
 
     'SUCCESS_CATALOG_CREATED' => 'Fichiers de catalogue créés avec succès.',
     'SUCCESS_ADMIN_CREATED' => 'Fichiers de l’administration créés avec succès.',
