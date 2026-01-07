@@ -732,7 +732,11 @@ if (is_dir($base_lang_dir)) {
                     <td class="col-key"><?php echo $key; ?></td>
                     <td class="col-orig">
                         <code><?php echo htmlspecialchars($raw_base_val); ?></code>
-                        <?php if (strpos($raw_base_val, '%s') !== false) echo '<div class="text-danger has-variable">' . sprintf(TEXT_CONTAINS_TOKEN, '%s') . '</div>'; ?>
+                        <?php
+                        if (preg_match('/%(?:\d+\$)?[+-]?(?:\d+)?(?:\.\d+)?[bcdeEfFgGosuxXid]/i', $raw_base_val)) {
+                            echo '<div class="text-danger has-variable">' . sprintf(TEXT_CONTAINS_TOKEN, '%s') . '</div>';
+                        }
+                        ?>
                     </td>
                     <td class="col-edit">
                         <?php
