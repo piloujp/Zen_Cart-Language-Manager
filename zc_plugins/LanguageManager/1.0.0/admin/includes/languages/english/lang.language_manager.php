@@ -63,7 +63,7 @@ $define = [
     'PHP_SYNTAX_ERROR' => ': Syntax Error',
     'ERROR_PLUGIN_PATH_INVALID' => 'Security Error: Invalid Plugin Path',
     'ERROR_PLUGIN_PATH_INVALID_RELATIVE' => 'Error: Could not determine relative path structure for plugin file.',
-    'ERROR_INVALID_FILE_EDIT' => 'Invalid filename. You are trying to edit %s but the system only allows %s',
+    'ERROR_INVALID_FILE_EDIT' => 'Invalid filename. You are trying to edit %1$s but the system only allows %2$s',
     'ERROR_BASE_FILE_NOT_FOUND' => 'Error: Base language file not found: %s',
 
     'SUCCESS_CATALOG_CREATED' => 'Catalog files created successfully.',

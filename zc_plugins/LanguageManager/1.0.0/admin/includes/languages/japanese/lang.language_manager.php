@@ -61,6 +61,10 @@ $define = [
     'TEXT_SUCCESS_SAVED' => '%s オーバーライドを次の場所に正常に保存しました：',
     'TEXT_OVERRIDES_REMOVED' => 'すべてのオーバーライドが削除されました。ファイルは削除されました。',
     'PHP_SYNTAX_ERROR' => '：構文エラー',
+    'ERROR_PLUGIN_PATH_INVALID' => 'セキュリティエラー：無効なプラグインパス',
+    'ERROR_PLUGIN_PATH_INVALID_RELATIVE' => 'エラー：プラグインファイルの相対パス構造を判別できませんでした。',
+    'ERROR_INVALID_FILE_EDIT' => 'ファイル名が無効です。%1$s を編集しようとしていますが、システムでは %2$s のみが許可されています。',
+    'ERROR_BASE_FILE_NOT_FOUND' => 'エラー：ベース言語ファイルが見つかりません： %s',
 
     'SUCCESS_CATALOG_CREATED' => 'カタログ ファイルが正常に作成されました。',
     'SUCCESS_ADMIN_CREATED' => '管理ファイルが正常に作成されました。',

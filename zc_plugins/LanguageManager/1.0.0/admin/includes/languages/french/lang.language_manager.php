@@ -61,6 +61,10 @@ $define = [
     'TEXT_SUCCESS_SAVED' => 'Les modifications %s ont été enregistrées avec succès dans ',
     'TEXT_OVERRIDES_REMOVED' => 'Toutes les modifications ont été supprimées. Fichier supprimé.',
     'PHP_SYNTAX_ERROR' => ' : Erreur de syntaxe',
+    'ERROR_PLUGIN_PATH_INVALID' => 'Erreur de sécurité : Chemin d’accès au plugin invalide',
+    'ERROR_PLUGIN_PATH_INVALID_RELATIVE' => 'Erreur : Impossible de déterminer la structure du chemin relatif au fichier du plugin.',
+    'ERROR_INVALID_FILE_EDIT' => 'Nom de fichier invalide. Vous essayez de modifier %1$s, mais le système n’autorise que %2$s.',
+    'ERROR_BASE_FILE_NOT_FOUND' => 'Erreur : Fichier de langue de base introuvable : %s',
 
     'SUCCESS_CATALOG_CREATED' => 'Fichiers de catalogue créés avec succès.',
     'SUCCESS_ADMIN_CREATED' => 'Fichiers de l’administration créés avec succès.',
