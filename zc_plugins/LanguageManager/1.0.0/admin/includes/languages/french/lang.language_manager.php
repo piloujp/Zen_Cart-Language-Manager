@@ -68,6 +68,7 @@ $define = [
 
     'SUCCESS_CATALOG_CREATED' => 'Fichiers de catalogue créés avec succès.',
     'SUCCESS_ADMIN_CREATED' => 'Fichiers de l’administration créés avec succès.',
+    'SUCCESS_PLUGIN_CREATED' => 'Fichiers de plugins créés avec succès.',
     'SUCCESS_LANG_PACK_READY' => 'Le pack linguistique « %s » est prêt. Vous pouvez maintenant l’ajouter dans Localisation > Langues.',
 ];
 

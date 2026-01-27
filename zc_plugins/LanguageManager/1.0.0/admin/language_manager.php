@@ -91,6 +91,37 @@ if ($action == 'create_language' && isset($_POST['new_language'])) {
     $adm_target_loader = DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'lang.' . $new_lang_name . '.php';
     $adm_target_dir = DIR_FS_ADMIN . DIR_WS_LANGUAGES . $new_lang_name . '/';
 
+    // plugins paths (encapsulated installed)
+    define('DIR_FS_PLUGIN', DIR_FS_CATALOG . 'zc_plugins/');
+    $plugins_dirs = $db->Execute("SELECT unique_key, version FROM " . TABLE_PLUGIN_CONTROL . " WHERE version <> ''");
+    $plugins_dir = []; // Array for plugins source and target languages directories
+    $plugins_list = []; // Installed plugins unique keys and version
+    $plugins_not_empty = false;
+    if (!$plugins_dirs->EOF) {
+        foreach($plugins_dirs as $plugin_dir) {
+            $plugin_base_dir = DIR_FS_PLUGIN . $plugin_dir['unique_key'] . '/' . $plugin_dir['version'] . '/';
+            if (is_dir($plugin_base_dir)) {
+                $plugins_list[$plugin_dir['unique_key']] = $plugin_dir['version']; // Saving installed plugins unique keys and version
+                // Saving plugins language directories for source language
+                $plug_adm_source_dir = $plugin_base_dir . 'admin/includes/languages/' . $source_lang . '/';
+                $plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['source']['admin'] = is_dir($plug_adm_source_dir) ? $plug_adm_source_dir : '';
+                $plug_cat_source_dir = $plugin_base_dir . 'catalog/includes/languages/' . $source_lang . '/';
+                $plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['source']['catalog'] = is_dir($plug_cat_source_dir) ? $plug_cat_source_dir : '';
+                $plug_inst_source_dir = $plugin_base_dir . 'Installer/languages/' . $source_lang . '/';
+                $plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['source']['installer'] = is_dir($plug_inst_source_dir) ? $plug_inst_source_dir : '';
+                // Saving plugins language directories for target language
+                $plug_adm_target_dir = $plugin_base_dir . 'admin/includes/languages/' . $new_lang_name . '/';
+                $plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['target']['admin'] = empty($plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['source']['admin']) ? '' : $plug_adm_target_dir;
+                $plug_cat_target_dir = $plugin_base_dir . 'catalog/includes/languages/' . $new_lang_name . '/';
+                $plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['target']['catalog'] = empty($plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['source']['catalog']) ? '' : $plug_cat_target_dir;
+                $plug_inst_target_dir = $plugin_base_dir . 'Installer/languages/' . $new_lang_name . '/';
+                $plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['target']['installer'] = empty($plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['source']['installer']) ? '' : $plug_inst_target_dir;
+                
+                if ($plugins_not_empty === false && !empty($plugins_dir)) $plugins_not_empty = true;
+            }
+        }
+    }
+
     // validation
     $errors = [];
 
@@ -141,6 +172,15 @@ if ($action == 'create_language' && isset($_POST['new_language'])) {
 
             $messageStack->add(SUCCESS_ADMIN_CREATED, 'success');
         }
+
+        // plugins clone
+        foreach ($plugins_list as $key => $version) {
+            // recursive copy
+            if (!empty($plugins_dir[$key][$version]['source']['admin']) && !empty($plugins_dir[$key][$version]['target']['admin'])) recursive_copy($plugins_dir[$key][$version]['source']['admin'], $plugins_dir[$key][$version]['target']['admin']);
+            if (!empty($plugins_dir[$key][$version]['source']['catalog']) && !empty($plugins_dir[$key][$version]['target']['catalog'])) recursive_copy($plugins_dir[$key][$version]['source']['catalog'], $plugins_dir[$key][$version]['target']['catalog']);
+            if (!empty($plugins_dir[$key][$version]['source']['installer']) && !empty($plugins_dir[$key][$version]['target']['installer'])) recursive_copy($plugins_dir[$key][$version]['source']['installer'], $plugins_dir[$key][$version]['target']['installer']);
+        }
+        if ($plugins_not_empty) $messageStack->add(SUCCESS_PLUGIN_CREATED, 'success'); // If there was something to copy, it is considered as a succes
 
         $messageStack->add(sprintf(SUCCESS_LANG_PACK_READY, $new_lang_name), 'success');
     }

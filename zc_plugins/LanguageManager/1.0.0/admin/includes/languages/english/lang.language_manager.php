@@ -68,6 +68,7 @@ $define = [
 
     'SUCCESS_CATALOG_CREATED' => 'Catalog files created successfully.',
     'SUCCESS_ADMIN_CREATED' => 'Admin files created successfully.',
+    'SUCCESS_PLUGIN_CREATED' => 'Plugins files created successfully.',
     'SUCCESS_LANG_PACK_READY' => 'Language Pack "%s" is ready. You can now add it in Localization > Languages.',
 ];
 

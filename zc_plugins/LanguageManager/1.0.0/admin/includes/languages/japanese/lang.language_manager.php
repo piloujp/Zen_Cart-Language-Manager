@@ -66,8 +66,9 @@ $define = [
     'ERROR_INVALID_FILE_EDIT' => 'ファイル名が無効です。%1$s を編集しようとしていますが、システムでは %2$s のみが許可されています。',
     'ERROR_BASE_FILE_NOT_FOUND' => 'エラー：ベース言語ファイルが見つかりません： %s',
 
-    'SUCCESS_CATALOG_CREATED' => 'カタログ ファイルが正常に作成されました。',
+    'SUCCESS_CATALOG_CREATED' => 'カタログファイルが正常に作成されました。',
     'SUCCESS_ADMIN_CREATED' => '管理ファイルが正常に作成されました。',
+    'SUCCESS_PLUGIN_CREATED' => 'プラグインファイルが正常に作成されました。',
     'SUCCESS_LANG_PACK_READY' => '言語パック「%s」が準備完了です。ローカリゼーション＞言語で追加できます。',
 ];
 
