@@ -542,7 +542,7 @@ if (is_dir($base_lang_dir)) {
                             </span>
                         </div>
                         <div class="input-group">
-                            <input type="checkbox" id="plugins" name="plugins" value="included" checked>
+                            <input type="checkbox" id="plugins" name="plugins" value="included">
                             <label for="plugins"><?php echo TEXT_PLUGINS_INCLUDED; ?></label>
                         </div>
                     </div>
