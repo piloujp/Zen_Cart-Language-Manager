@@ -9,7 +9,6 @@ $define = [
     'TEXT_NEW_LANGUAGE_SOURCE' => 'ソース言語:',
     'TEXT_NEW_LANGUAGE_TARGET' => '対象言語（小文字）：',
     'TEXT_PLACEHOLDER_LANG_CODE' => '例：french',
-    'TEXT_PLUGINS_INCLUDED' => '&nbsp;インストールされたカプセル化されたプラグインファイルを含めますか？',
     'TEXT_TITLE_LOWERCASE' => '小文字のみ',
     'BUTTON_CREATE' => '作成',
 

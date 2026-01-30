@@ -9,7 +9,6 @@ $define = [
     'TEXT_NEW_LANGUAGE_SOURCE' => 'Source Language:',
     'TEXT_NEW_LANGUAGE_TARGET' => 'Target Language (lowercase):',
     'TEXT_PLACEHOLDER_LANG_CODE' => 'e.g. french',
-    'TEXT_PLUGINS_INCLUDED' => '&nbsp;Include installed encapsulated plugins files?',
     'TEXT_TITLE_LOWERCASE' => 'Lowercase letters only',
     'BUTTON_CREATE' => 'Create',
 

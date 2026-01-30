@@ -9,7 +9,6 @@ $define = [
     'TEXT_NEW_LANGUAGE_SOURCE' => 'Langue source :',
     'TEXT_NEW_LANGUAGE_TARGET' => 'Langue cible (en minuscules) :',
     'TEXT_PLACEHOLDER_LANG_CODE' => 'par exemple : french',
-    'TEXT_PLUGINS_INCLUDED' => '&nbsp;Inclure les fichiers de plugins encapsulés installés ?',
     'TEXT_TITLE_LOWERCASE' => 'Lettres minuscules uniquement',
     'BUTTON_CREATE' => 'Créer',
 
