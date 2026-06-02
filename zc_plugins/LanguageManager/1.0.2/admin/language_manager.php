@@ -116,7 +116,7 @@ if ($action == 'create_language' && isset($_POST['new_language'])) {
                 $plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['target']['catalog'] = empty($plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['source']['catalog']) ? '' : $plug_cat_target_dir;
                 $plug_inst_target_dir = $plugin_base_dir . 'Installer/languages/' . $new_lang_name . '/';
                 $plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['target']['installer'] = empty($plugins_dir[$plugin_dir['unique_key']][$plugin_dir['version']]['source']['installer']) ? '' : $plug_inst_target_dir;
-                
+
                 if ($plugins_not_empty === false && !empty($plugins_dir)) $plugins_not_empty = true;
             }
         }
